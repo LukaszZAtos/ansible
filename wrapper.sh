@@ -37,7 +37,7 @@ done
 if [ -n "$encrypted_token" ]; then
     decrypted_token=$(decrypt_token "$encrypted_token")
     # Run the Python script with the decrypted token and other arguments
-    python3 hashed.py -t "$decrypted_token" -tid "$template_id" -u "$api_url"
+    python3 check_job.py -t "$decrypted_token" -tid "$template_id" -u "$api_url"
 else
     echo "No encrypted token provided."
 fi
