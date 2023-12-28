@@ -74,3 +74,66 @@ Parses arguments for API token (`--token`), job ID (`--jobid`), template ID (`--
 ## Note
 
 The script is designed to exit with different codes based on the execution outcome (success or failure), which is useful in automated workflows to determine the next steps based on the job status.
+
+
+# Ansible Job Monitoring with Secure Token Handling
+
+This setup includes a Bash wrapper (`wrapper.sh`) and a Go-based encryption/decryption tool (`hasher.go`) for secure Ansible token handling.
+
+## `wrapper.sh`
+
+### Functionality
+
+This script decrypts an encrypted Ansible API token using the `hasher` utility and then runs a Python script for Ansible job monitoring.
+
+### `decrypt_token` Function
+
+- **Purpose**: Decrypts the provided encrypted token using `hasher`.
+- **Input**: Encrypted token.
+- **Output**: Decrypted token.
+
+### Command-Line Argument Parsing
+
+- Handles arguments for the encrypted token (`-t | --token`), template ID (`-tid | --templateid`), and API URL (`-u | --url`).
+
+### Execution Flow
+
+1. Decrypts the provided token.
+2. Runs the Python script `check_job.py` with the decrypted token and other provided arguments.
+
+## `hasher.go`
+
+### Functionality
+
+A Go program for encrypting and decrypting tokens using AES encryption.
+
+### Constants
+
+- `hardcodedSalt`: A predefined salt for encryption and decryption.
+
+### Key Functions
+
+#### `generateKey(salt string)`
+
+- Generates a 32-byte key using the provided salt and `hardcodedSalt`.
+
+#### `encryptToken(token, salt string)`
+
+- Encrypts a token using AES cipher.
+
+#### `decryptToken(encryptedToken string)`
+
+- Decrypts an encrypted token using AES cipher.
+
+### Main Function
+
+- Handles command-line arguments for encryption (`encrypt`) and decryption (`decrypt`) actions.
+
+### Usage
+
+- Encrypt a token: `./hasher encrypt <token>`
+- Decrypt a token: `./hasher decrypt <encryptedToken>`
+
+### Note
+
+- The use of a hardcoded salt in production environments is not recommended for security reasons. Consider using a securely stored or dynamically generated salt.
