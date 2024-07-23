@@ -1,6 +1,6 @@
 # Ansible Job Monitoring Script
 
-This Python script is designed for monitoring Ansible jobs by interacting with an Ansible API. It allows checking the status of specific jobs or the last job executed from a given template.
+This Python script is designed for monitoring Ansible jobs by interacting with an Ansible API. It allows checking the status of specific jobs, the last job executed from a given template, or jobs listed in a file.
 
 ## Import Statements
 
@@ -9,11 +9,11 @@ This Python script is designed for monitoring Ansible jobs by interacting with a
 - `sys`: For accessing system-specific parameters and functions.
 - `urllib3`: To handle HTTP client and server communications. The script disables SSL warnings, which is common in environments with self-signed certificates.
 
-## Function: `get_last_job_id(api_url, api_token, template_id)`
+## Function: `get_most_recent_job_id(api_url, api_token, template_id)`
 
 ### Purpose
 
-Retrieves the ID of the last job launched from a specified job template.
+Retrieves the ID of the most recent job launched from a specified job template.
 
 ### Parameters
 
@@ -25,7 +25,7 @@ Retrieves the ID of the last job launched from a specified job template.
 
 1. Constructs the API endpoint URL.
 2. Makes a GET request to the API.
-3. Parses the response to find the last job ID.
+3. Parses the response to find the most recent job ID.
 4. Handles potential exceptions and errors.
 
 ## Function: `check_ansible_job_status(api_url, api_token, job_id)`
@@ -36,45 +36,70 @@ Checks the status of a specified Ansible job.
 
 ### Parameters
 
-- `api_url`, `api_token`, `job_id`: Same as above, with `job_id` being the specific job to check.
+- `api_url`: The base URL of the Ansible API.
+- `api_token`: Bearer token for API authentication.
+- `job_id`: The ID of the specific job to check.
 
 ### Process
 
 1. Constructs the API endpoint URL for the specific job.
 2. Makes a GET request and retrieves the job's status.
-3. Prints the job status and handles exceptions.
+3. Returns the job status and handles exceptions.
+
+## Function: `check_jobs_from_file(api_url, api_token, file_path)`
+
+### Purpose
+
+Checks the statuses of the most recent jobs from a list of job template IDs provided in a file.
+
+### Parameters
+
+- `api_url`: The base URL of the Ansible API.
+- `api_token`: Bearer token for API authentication.
+- `file_path`: Path to the file containing the list of template IDs.
+
+### Process
+
+1. Reads the template IDs from the file.
+2. For each template ID, retrieves the most recent job ID and checks its status.
+3. Collects failed jobs and handles errors.
+4. Returns appropriate exit codes based on the job statuses.
 
 ## Main Execution Block
 
 ### Command-Line Argument Parsing
 
-Parses arguments for API token (`--token`), job ID (`--jobid`), template ID (`--templateid`), and API URL (`--url`).
+Parses arguments for API token (`--token`), job ID (`--jobid`), template ID (`--templateid`), API URL (`--url`), and a file containing template IDs (`--file`).
 
 ### Conditional Logic
 
 - If a job ID is provided, it checks the status of that specific job.
-- If a template ID is provided, it finds the last job ID from that template and checks its status.
-- If neither is provided, it prompts the user to supply the necessary arguments.
+- If a template ID is provided, it finds the most recent job ID from that template and checks its status.
+- If a file is provided, it checks the statuses of the most recent jobs from the template IDs listed in the file.
+- If none of these are provided, it prompts the user to supply the necessary arguments.
 
 ## Usage
 
 1. **Prepare Command-Line Arguments**:
-   - Ensure you have the API token, the API URL, and either a job ID or template ID.
+   - Ensure you have the API token, the API URL, and either a job ID, template ID, or a file containing template IDs.
 
 2. **Execute the Script**:
-   - Run the script with the necessary arguments. For example:
+   - To check a specific job:
      ```bash
      python script_name.py --token YOUR_API_TOKEN --url YOUR_API_URL --jobid 123
      ```
-   - Alternatively, use the template ID to check the last job from that template:
+   - To check the most recent job from a template:
      ```bash
      python script_name.py --token YOUR_API_TOKEN --url YOUR_API_URL --templateid 456
+     ```
+   - To check jobs from a list of templates:
+     ```bash
+     python script_name.py --token YOUR_API_TOKEN --url YOUR_API_URL --file path/to/template_ids.txt
      ```
 
 ## Note
 
 The script is designed to exit with different codes based on the execution outcome (success or failure), which is useful in automated workflows to determine the next steps based on the job status.
-
 
 # Ansible Job Monitoring with Secure Token Handling
 
@@ -84,7 +109,7 @@ This setup includes a Bash wrapper (`wrapper.sh`) and a Go-based encryption/decr
 
 ### Functionality
 
-This script decrypts an encrypted Ansible API token using the `hasher` utility and then runs a Python script for Ansible job monitoring.
+This script decrypts an encrypted Ansible API token using the `hasher` utility and then runs the Python script for Ansible job monitoring.
 
 ### `decrypt_token` Function
 
@@ -131,9 +156,11 @@ A Go program for encrypting and decrypting tokens using AES encryption.
 
 ### Usage
 
-- Encrypt a token: `./hasher encrypt <token>`
-- Decrypt a token: `./hasher decrypt <encryptedToken>`
-
-### Note
-
-- The use of a hardcoded salt in production environments is not recommended for security reasons. Consider using a securely stored or dynamically generated salt.
+- Encrypt a token:
+  ```bash
+  ./hasher encrypt <token>
+  ```
+- Decrypt a token:
+```bash
+./hasher decrypt <encryptedToken>
+```  
